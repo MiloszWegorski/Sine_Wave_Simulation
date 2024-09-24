@@ -6,7 +6,7 @@ class Wave:
         self.phase = phase
         self.amp = amp
         self.offset = offset
-        self.times = np.arange(0, time, time/10000) #time of propagation
+        self.times = np.arange(0, time, 0.002) #time of propagation
         self.clean_sine_data = (amp * np.sin(self.times * 2 * np.pi* freq + phase)) + offset
         self.noise_level = noise_level
         self.noisy_sine_data = self.noisifier(self.times, self.clean_sine_data, noise_level)
