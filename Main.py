@@ -8,7 +8,8 @@ print()
 
 fig, ax = plt.subplots(1,2)
 
-#ax[0].plot(wav1.times, wav1.clean_sine_data)ax[1].plot(wav1.times, wav1.noisy_sine_data)
+ax[0].plot(wav1.times, wav1.clean_sine_data)
+ax[1].plot(wav1.times, wav1.noisy_sine_data)
 
 
 results = measure(6, 0.37, wav1.clean_sine_data, wav1.times)
