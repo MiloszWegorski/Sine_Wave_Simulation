@@ -41,3 +41,6 @@ class Wave:
             noisy_amps[j] = i + amps[j]
 
         return noisy_amps
+    
+def sin_func( time:list[float], amp: float, freq: float, phase: float, offset: float):
+    return amp* np.sin(time * +2 * np.pi * freq + phase) + offset
