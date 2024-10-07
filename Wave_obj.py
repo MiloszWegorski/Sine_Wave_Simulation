@@ -9,7 +9,8 @@ class Signal:
     signal and measurement scheme with applied noise from the noisifier
     objects to change these call their respective setters
     """
-    def __init__(self):
+    def __init__(self, freq = None, phase = None, amp = None, 
+                offset = None):
         """
         Args:
             freq (float): Frequency
@@ -18,10 +19,22 @@ class Signal:
             offset (float): amplitude offset
             time (float): time for which the wave propagates
         """
-        self.frequency = 5
-        self.phase = 0
-        self.amplitude = 1
-        self.offset = 0
+        if freq == None:
+            freq = 5
+
+        if phase == None:
+            phase = 0
+
+        if amp == None:
+            amp = 1
+
+        if offset == None:
+            offset = 0
+
+        self.frequency = freq
+        self.phase = phase
+        self.amplitude = amp
+        self.offset = offset
 
     def get_measurements(self):
 
@@ -72,9 +85,10 @@ class Noisifier:
     Applies a set noise to a set of measurements to change the noise 
     level use set_noise_level
     """
-    def __innit__(self):
-
-        self.noise_level = 0
+    def __innit__(self, noise = None):
+        if noise == None:
+            noise == 0
+        self.noise_level = noise
 
     def set_noise_level(self, noise):
 
@@ -110,8 +124,10 @@ class Model_signal:
     Function to generate the model signal to change it use set_signal 
     giving it a function by which to generate the signal
     """
-    def __innit__(self):
-        self.function = sin_func
+    def __innit__(self, func = None):
+        if func == None:
+            self.function == sin_func
+        self.function = func
 
     def set_signal(self, func):
 
@@ -122,13 +138,15 @@ class Model_signal:
         return self.function
 
 
-class Measurement_scheme:
+class Measurement_scheme():
     """
     Scheme by which measurements are made to change pass an array of 
     measurement points to set_scheme
     """
-    def __innit__(self):
-        self.scheme = np.linspace(0, 5, 50)
+    def __innit__(self, scheme = None):
+        if scheme == None:
+            self.scheme = np.linspace(0, 5, 50)
+        self.scheme = scheme
 
     def set_scheme(self, func):
         self.scheme = func
@@ -144,4 +162,6 @@ class Measurement_system:
         return Signal.get_measurements()
     
 
-print(Measurement_system.measure())
+noise = Measurement_scheme()
+
+print(noise.get_scheme())
