@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 import scipy
 
 def fit_sin(measurements : list):
@@ -10,15 +10,21 @@ def fit_sin(measurements : list):
     offset = maxima - amplitude
 
     peaks = []
-    print(measurements)
+
     for i in range(len(measurements[0])- 2):
 
-        if abs(measurements[1][i]) >= abs(measurements[1][i+1]):
-            peaks.append((measurements[0][i] + measurements[0][i+1])/2)
+        if abs(measurements[1][i]) >= abs(measurements[1][i+1]) and abs(measurements[1][i-1]) <= abs(measurements[1][i]):
+            
+            peaks.append(measurements[0][i])
+            peaks.append((measurements[0][i-1] + measurements[0][i+1])/2)
 
-    
-    interval = 2 * (peaks[1] - peaks[0])
+    intervals = []
 
-    lam = 1/interval
+    for i in range(len(peaks)-2):
+        intervals.append(peaks[i+2] - peaks[i])
 
-    return lam, amplitude, offset
+    interval = 2*np.average(intervals)
+
+    freq = 1/interval
+
+    return freq, amplitude, offset, peaks
