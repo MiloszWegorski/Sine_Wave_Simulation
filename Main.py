@@ -1,31 +1,47 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import random
+from scipy.optimize import curve_fit
 
-from prediction_algorithm import fit_sin
-from Signal_source.Signal import Measurement_system
-from Signal_source.Model_signal import Model_signal, sin_func
-from Signal_source.Noisifier import Noisifier
-from Signal_source.Measurement_scheme import Measurement_scheme
+from Signal_source.Measurement_schemes import Uniform_Measurement
+from Signal_source.Model_signals import Sine_wave
+from Signal_source.Measurement_Systems import Measure_Normal_Sine
+from Signal_source.Noisifiers import Gaussian_noise
+from Fitter import valley_fitter
 
-arr = []
-tot = 0
+scheme = Uniform_Measurement(0, 2, 200)
 
-for i in range(50):
-    arr.append(float(tot))
-    tot = tot + random.uniform(0, 0.7)
+signal = Sine_wave(2, 1, 0, 0)
 
-Measurement_scheme().set_scheme(arr)
+noisifier_amp = Gaussian_noise(0.05)
+noisifier_time = Gaussian_noise(0)
 
-signal = Measurement_system.measure()
+measure_device = Measure_Normal_Sine(scheme, signal)
 
-measurements = [Measurement_scheme().get_scheme(), signal]
+points = measure_device.Measure()
 
-freq, amp, off, peaks = fit_sin(measurements)
+points[1] = noisifier_amp.noisify(points[1])
+points[0] = noisifier_time.noisify(points[0])
 
-time = np.linspace(0, arr[-1], 1000)
+threshold = 0.5
 
-plt.plot(time, sin_func(time, amp, freq, 0, off))
 
-plt.scatter(Measurement_scheme().get_scheme(), signal)
+
+
+fitter = valley_fitter(threshold, points)
+
+a, f, o = fitter.fit_points()
+print('amplitude : ' + str(a))
+print('frequency : ' + str(f))
+
+measured_signal = Sine_wave(f, a, o, 0)
+
+measured_scheme = Uniform_Measurement(0, 2, 1000)
+
+measure_device_out = Measure_Normal_Sine(measured_scheme, measured_signal)
+
+measured_points = measure_device_out.Measure()
+
+plt.scatter(points[0], points[1], label = 'measurement points')
+plt.plot(measured_points[0], measured_points[1], label='fitted signal', color = 'r')
+plt.legend()
 plt.show()
