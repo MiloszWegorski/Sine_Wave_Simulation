@@ -32,78 +32,51 @@ class valley_fitter(fitter):
 
     def _fit_points(self):
         
-        amps_abs = abs(self.amplitudes)
 
 
         #calculate the minimum and maximum
-        minima = min(self.amplitudes)
-        maxima = max(self.amplitudes)
+        min_amp = np.min(self.amplitudes)
+        max_amp = np.max(self.amplitudes)
 
         #get amplitude
-        amplitude = (maxima - minima)/2
+        amplitude = (max_amp - min_amp)/2
 
         #get offset
-        offset = np.average([minima + amplitude,
-                             maxima - amplitude])
+        offset = (min_amp + max_amp)/2
+
+        amps_abs = np.abs(self.amplitudes - offset)
+
+        dips = amps_abs < (self.threshhold * amplitude)
+
+        Clump_mask = np.ma.masked_array(np.zeros_like(dips))
+
+        Clump_mask[dips] = np.ma.masked
+
+        Clumps = np.ma.clump_masked(Clump_mask)
+
+        averages = []
+        for i in Clumps:
+            averages.append(np.average(self.times[i]))
+
+        half_period = np.average(np.diff(averages))
+
+        freq = 1/ (2* half_period)
+
+        #phase
+        delta_t = averages[0]
+
+        index_peak = np.int32((Clumps[0].stop + Clumps[1].start)/2)
+
+        if (self.amplitudes[index_peak]- offset) < 0:
+            #take delta_t and return phase
+            phase = ((delta_t/half_period)*np.pi)
         
-        #array to store the values which are below the threshold
-        dips = []
-
-        #obtain all values below threshold
-        for i, j in zip(self.times, amps_abs):
-
-            if j < self.threshhold*amplitude:
-                dips.append(i)
-
-        
-        prev = dips[0]
-        #array to store biggest x axis gap found
-        big = 0
-
-        #find biggest x axis gap between points
-        for i in range(1, len(dips)):
-
-            diff = dips[i] - prev
-
-            if diff > big:
-                big = diff
-
-            prev = dips[i]
-
-        #array to store the averages
-        averages = [0]
-        #store total of all previous points
-        tot = dips[0]
-        #keep count of points
-        count = 1
-
-        for i in range(1, len(dips)):
-            #if the x axis gap between points is small enough add them
-            if (dips[i] - dips[i-1]) < (0.7 * big):
-                count += 1
-                tot += dips[i]
-
-            #when the gap is bigger means that it belongs to the next
-            #half of the waveform therefore average previous sum and 
-            #reset the counter
-            else:
-                averages.append(tot/count)
-                tot = dips[i]
-                count = 1
-
-        #calculating the length of the gaps between the points 
-        gaps = []
-        for i in range(1,len(averages)):
+        elif (self.amplitudes[index_peak] - offset) > 0:
             
-            gaps.append((averages[i] - averages[i-1]))
+            phase = (((delta_t/half_period)+1)*np.pi)
 
-        #remove 0th term as it is very small and erroneous
-        gaps.pop(0)
-        
-        #calculate frequency
-        freq = 1/ (2* np.average(gaps))
-
-        return amplitude, freq, offset
+        return freq,amplitude, offset, phase
     
+
     def _get_name():
         pass

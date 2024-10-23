@@ -8,40 +8,62 @@ from Signal_source.Measurement_Systems import Measure_Normal_Sine
 from Signal_source.Noisifiers import Gaussian_noise
 from Fitter import valley_fitter
 
-scheme = Uniform_Measurement(0, 2, 200)
+from Monte_carlo import Monte_carlo_Analyse
 
-signal = Sine_wave(2, 1, 0, 0)
+def Sine_wav(times, freq, amp, offset, phase):
 
-noisifier_amp = Gaussian_noise(0.05)
-noisifier_time = Gaussian_noise(0)
+    return amp * np.sin(2 * times * np.pi * freq + phase) + offset
 
-measure_device = Measure_Normal_Sine(scheme, signal)
+def simulate_measurement(source_frequency : float, source_amplitude : float, 
+         source_phase : float, source_offset : float, threshold : float,
+         noise_level : float,start_time : float, end_time : float,
+         num_points : int):
 
-points = measure_device.Measure()
+    scheme = Uniform_Measurement(start_time, end_time, num_points)
 
-points[1] = noisifier_amp.noisify(points[1])
-points[0] = noisifier_time.noisify(points[0])
+    signal = Sine_wave(source_frequency, source_amplitude, source_phase, 
+                    source_offset)
 
-threshold = 0.5
+    noisifier_amp = Gaussian_noise(noise_level)
+    noisifier_time = Gaussian_noise(noise_level)
+
+    measure_device = Measure_Normal_Sine(scheme, signal)
+
+    points = measure_device.Measure()
+
+    points[1] = noisifier_amp.noisify(points[1])
+    points[0] = noisifier_time.noisify(points[0])
+
+    fitter = valley_fitter(threshold, points)
+
+    fitted_freq, fitted_amp, fitted_offset, fitted_phase = fitter.fit_points()
+
+    popt, pcov = curve_fit(Sine_wav, points[0], points[1], 
+                             p0=(fitted_freq, fitted_amp, fitted_offset, 
+                                 fitted_phase), maxfev=int(1e3))
+
+    return popt[0], popt[1], popt[2], popt[3]
 
 
+monte_carlo = Monte_carlo_Analyse(simulate_measurement)
 
+monte_carlo.analyse(10000)
 
-fitter = valley_fitter(threshold, points)
+#print('amplitude : ' + str(a))
+#print('frequency : ' + str(f))
+#print('offset: ' + str(o))
+#print('Phase: ' + str(p))
 
-a, f, o = fitter.fit_points()
-print('amplitude : ' + str(a))
-print('frequency : ' + str(f))
+#measured_signal = Sine_wave(f, a, p, o)
 
-measured_signal = Sine_wave(f, a, o, 0)
+#measured_scheme = Uniform_Measurement(0, 2, 1000)
 
-measured_scheme = Uniform_Measurement(0, 2, 1000)
+#measure_device_out = Measure_Normal_Sine(measured_scheme, measured_signal)
 
-measure_device_out = Measure_Normal_Sine(measured_scheme, measured_signal)
+#measured_points = measure_device_out.Measure()
 
-measured_points = measure_device_out.Measure()
-
-plt.scatter(points[0], points[1], label = 'measurement points')
-plt.plot(measured_points[0], measured_points[1], label='fitted signal', color = 'r')
-plt.legend()
-plt.show()
+#plt.scatter(points[0], points[1], label = 'measurement points')
+#plt.plot(measured_points[0], measured_points[1], label='fitted signal', color = 'r')
+#plt.axhline(threshold)
+#plt.legend()
+#plt.show()
