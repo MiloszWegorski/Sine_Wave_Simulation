@@ -2,7 +2,7 @@ import numpy as np
 from scipy import stats
 from abc import ABC, abstractmethod
 
-class Measurement_scheme(ABC):
+class MeasurementScheme(ABC):
     
     def get_points(self):
         return self._get_points()
@@ -18,33 +18,105 @@ class Measurement_scheme(ABC):
     def _get_name(self):
         pass
 
-class Uniform_Measurement(Measurement_scheme):
+    def get_param_value(self, param_name):
+        return self._get_param_value(param_name)
+    
+    @abstractmethod
+    def _get_param_value(self, param_name):
+        pass
 
-    def __init__(self, start, end, num_points):
-        self.start = start
-        self.end = end
+    def set_param_value(self, param_name, param_value):
+        return self._set_param_value(param_name, param_value)
+    
+    @abstractmethod
+    def _set_param_value(self, param_name, param_value):
+        pass
+
+    def get_param_names(self):
+        return self._get_param_names()
+    
+    @abstractmethod
+    def _get_param_names(self):
+        pass
+
+class UniformMeasurement(MeasurementScheme):
+
+    def __init__(self, start_time, end_time, num_points):
+        self.start_time = start_time
+        self.end_time = end_time
         self.num_points = num_points
 
-        self.name = f"Uniform distribution from {start} to {end} with {num_points} points"
+        self.name = f"Uniform distribution from {start_time} to {end_time}\
+ with {num_points} points"
 
     def _get_points(self):
-        return np.array(np.linspace(self.start, self.end, self.num_points))
+        return np.array(np.linspace(self.start_time, self.end_time, self.num_points))
     
     def _get_name(self):
         return self.name
     
+    def _get_param_value(self, param_name):
+        match param_name:
+            case 'start_time':
+                return self.start_time
+            case 'end_time':
+                return self.end_time
+            case 'num_points':
+                return self.num_points
+            case _:
+                raise ValueError(f'Unknown parameter name {param_name}') 
+    
+    def _set_param_value(self, param_name, param_value):
+        match param_name:
+            case 'start_time':
+                self.start_time = param_value
+            case 'end_time':
+                self.end_time = param_value
+            case 'num_points':
+                self.num_points = param_value
+            case _:
+                raise ValueError('Unknown parameter name') 
+            
+    def _get_param_names(self):
+        return ['start_time', 'end_time', 'num_points']
 
-class Log_Measurement(Measurement_scheme):
+class LogMeasurement(MeasurementScheme):
 
-    def __init__(self, start, end, num_points):
-        self.start = start
-        self.end = end
+    def __init__(self, start_time, end_time, num_points):
+        self.start_time = start_time
+        self.end_time = end_time
         self.num_points = num_points
 
-        self.name = f"Logarithmic distribution from {start} to {end} with {num_points} points"
+        self.name = f"Logarithmic distribution from {start_time} to {end_time}\
+ with {num_points} points"
 
     def _get_points(self):
         return np.logspace(self.start, self.end, self.num_points)
     
-    def get_name(self):
+    def _get_name(self):
         return self.name
+    
+    def _get_param_value(self, param_name):
+        match param_name:
+            case 'start_time':
+                return self.start_time
+            case 'end_time':
+                return self.end_time
+            case 'num_points':
+                return self.num_points
+            case _:
+                raise ValueError(f'Unknown parameter name {param_name}')  
+    
+    def _set_param_value(self, param_name, param_value):
+        match param_name:
+            case 'start_time':
+                self.start_time = param_value
+            case 'end_time':
+                self.end_time = param_value
+            case 'num_points':
+                self.num_points = param_value
+            case _:
+                raise ValueError(f'Unknown parameter name {param_name}') 
+            
+    def _get_param_names(self):
+        return ['start_time', 'end_time', 'num_points']
